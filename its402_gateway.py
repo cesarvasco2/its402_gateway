@@ -30,7 +30,6 @@ def on_message(client, userdata, msg):
     dia_semana = date.today() 
     dict_payload = {}  
     lista_de_campos = [
-        {'key':'resolucao_configurada','type':'str','value_key':'v','fields':'resolution_configured'},
         {'key':'sinal','type':'str','value_key':'v','fields':'rssi'},
         {'key':'sinal_ruido','type':'str','value_key':'v','fields':'snr'},
         {'key':'modelo','type':'str','value_key':'vs','fields':'model'},
@@ -38,10 +37,10 @@ def on_message(client, userdata, msg):
         {'key':'voltagem_bateria','type':'str','value_key':'v','fields':'battery'},
         {'key':'temperatura','type':'str','value_key':'v','fields':'temperatura'},
         {'key':'umidade','type':'str','value_key':'v','fields':'umidade'},
-        {'key':'rele','type':'array','value_key':'vb','fields':('relay-B3','relay-B4')},
-        {'key':'entradas_4a20','type':'4a20','value_key':'v','fields':('current-E1','current-E2','current-E3','current-E4')},
+        {'key':'rele','type':'array','value_key':'vs','fields':('emr_b3_relay','emr_b4_relay')},
+        {'key':'entradas_4a20','type':'4a20','value_key':'v','fields':('emc_e1_curr','emc_e2_curr','emc_e3_curr','emc_e4_curr')},
         {'key':'pressao','type':'array','value_key':'v','fields':('pressure-E2','pressure-E3','pressure-E4')},
-        {'key':'status','type':'array','value_key':'vb','fields':('c1_status','c2_status')},
+        {'key':'status','type':'array','value_key':'vb','fields':('c1_status','c2_status','emr_c3_status','emr_c4_status')},
         
      ]
     dict_payload['id_dispositivo'] = list_payload[0]['bn']
@@ -87,9 +86,9 @@ def on_message(client, userdata, msg):
                     dict_payload['entradas_4a20'][v] = 0      
     if 'rele' in dict_payload:
         for v in range(len(dict_payload['rele'])): 
-            if dict_payload['rele'][v] == 'True': 
+            if dict_payload['rele'][v] == 'NC': 
                 dict_payload['rele'][v] = 1
-            elif dict_payload['rele'][v] == 'False': 
+            elif dict_payload['rele'][v] == 'NO': 
                 dict_payload['rele'][v] = 0
     if 'status' in dict_payload:
         for v in range(len(dict_payload['status'])): 
@@ -98,7 +97,7 @@ def on_message(client, userdata, msg):
             elif dict_payload['status'][v] == 'False': 
                 dict_payload['status'][v] = 0          
     print(dict_payload)
-    #queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
+    queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
 try:
     print('[STATUS] Inicializando MQTT...')
     #inicializa MQTT:
