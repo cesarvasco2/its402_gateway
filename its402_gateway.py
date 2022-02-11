@@ -8,6 +8,7 @@ from datetime import date, datetime
 import calendar
 import ssl
 import geohash
+import numpy as np
 sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName='processador_entrada')
 #configurações do broker:
@@ -39,7 +40,7 @@ def on_message(client, userdata, msg):
         {'key':'temperatura','type':'str','value_key':'v','fields':'temperatura'},
         {'key':'umidade','type':'str','value_key':'v','fields':'umidade'},
         {'key':'rele','type':'array','value_key':'vs','fields':('emr_b3_relay','emr_b4_relay')},
-        {'key':'coordinates','type':'array','value_key':'v','fields':('lat','lon')},
+        {'key':'coordinates','type':'coord','value_key':'v','fields':('lat','lon')},
         {'key':'entradas_4a20','type':'4a20','value_key':'v','fields':('emc_e1_curr','emc_e2_curr','emc_e3_curr','emc_e4_curr')},
         {'key':'pressao','type':'array','value_key':'v','fields':('pressure-E2','pressure-E3','pressure-E4')},
         {'key':'status','type':'array','value_key':'vb','fields':('c1_status','c2_status','emr_c3_status','emr_c4_status')},
@@ -51,7 +52,7 @@ def on_message(client, userdata, msg):
     for campo in lista_de_campos:
         for camp_equip in list_payload:
             if 'n' in camp_equip:
-                if campo['type']=='array' or campo['type']=='4a20':
+                if campo['type']=='array' or campo['type']=='4a20' or campo['type']=='coord' :
                     for field in campo['fields']:
                         if camp_equip['n'] == field:
                             if campo['key'] == 'status':
@@ -64,6 +65,8 @@ def on_message(client, userdata, msg):
                                     dict_payload[campo['key']]=[]
                                 if campo['type']=='4a20':
                                     dict_payload[campo['key']].append(int(camp_equip[campo['value_key']]*100000))
+                                elif campo['type']=='coord':
+                                    dict_payload[campo['key']].append(float(camp_equip[campo['value_key']]))
                                 else:    
                                     dict_payload[campo['key']].append(int(camp_equip[campo['value_key']]))
                 else:
@@ -72,7 +75,13 @@ def on_message(client, userdata, msg):
                             dict_payload[campo['key']] = str(camp_equip[campo['value_key']])
                         elif campo['type']=='int':
                             dict_payload[campo['key']] = int(camp_equip[campo['value_key']])    
-    dict_payload['geohash'] = geohash.encode(dict_payload['coordinates']) 
+    if 'coordinates' in dict_payload:
+        print(*dict_payload['coordinates'], sep = ',')
+        coord = str(dict_payload['coordinates'])[1:-1] 
+        float_coord = list(np.array(dict_payload['coordinates'], dtype = 'float'))
+        print(print(*float_coord, sep = ','))
+        dict_payload['geohash'] = geohash.encode(*float_coord, sep = ',')
+       
     dict_payload['codigo_produto'] = 16
     dict_payload['timestamp_servidor'] = int(datetime.now().timestamp())
     dict_payload['timestamp_dispositivo'] = int(list_payload[0]['bt'])
@@ -100,7 +109,7 @@ def on_message(client, userdata, msg):
             elif dict_payload['status'][v] == 'False': 
                 dict_payload['status'][v] = 0          
     print(dict_payload)
-    queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
+    #queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
 try:
     print('[STATUS] Inicializando MQTT...')
     #inicializa MQTT:
