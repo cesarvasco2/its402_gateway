@@ -76,10 +76,12 @@ def on_message(client, userdata, msg):
                         elif campo['type']=='int':
                             dict_payload[campo['key']] = int(camp_equip[campo['value_key']])    
     if 'coordinates' in dict_payload:
-        print(*dict_payload['coordinates'], sep = ',')
-        coord = str(dict_payload['coordinates'])[1:-1] 
+        dict_payload['coordinates'] = { "type": "Point", "coordinates": dict_payload['coordinates'] }
+        #print(*dict_payload['coordinates'], sep = ',')
+        coord = type(dict_payload['coordinates'][0])
+        print(coord)
         float_coord = list(np.array(dict_payload['coordinates'], dtype = 'float'))
-        print(print(*float_coord, sep = ','))
+        #print(print(*float_coord, sep = ','))
         dict_payload['geohash'] = geohash.encode(*float_coord, sep = ',')
        
     dict_payload['codigo_produto'] = 16
