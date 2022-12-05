@@ -12,12 +12,12 @@ import numpy as np
 sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName='processador_entrada')
 #configurações do broker:
-Broker = 'servermqtt.duckdns.org'
+Broker = 'message.hidroview.com.br'
 PortaBroker = 1883 
-Usuario = 'ghidro'
-Senha = 'ghidro'
+Usuario = 'khomp_gateway'
+Senha = 'UhFQ+^AG%6eL8MdzQ8ZW'
 KeepAliveBroker = 60
-TopicoSubscribe = '#' #Topico que ira se inscrever
+TopicoSubscribe = 'Its402/#' #Topico que ira se inscrever
 #Callback - conexao ao broker realizada
 def on_connect(client, userdata, flags, rc):
     print('[STATUS] Conectado ao Broker. Resultado de conexao: '+str(rc))
@@ -111,7 +111,7 @@ def on_message(client, userdata, msg):
             elif dict_payload['status'][v] == 'False': 
                 dict_payload['status'][v] = 0          
     print(dict_payload)
-    #queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
+    queue.send_message(MessageBody=str(json.dumps(dict_payload, ensure_ascii=False)))
 try:
     print('[STATUS] Inicializando MQTT...')
     #inicializa MQTT:
